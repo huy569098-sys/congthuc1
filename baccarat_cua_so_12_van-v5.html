@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phân Tích Cầu Baccarat — Đối Chiếu Nhịp Chuẩn Độc Lập Trái / Phải</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --card-2: #0b1220;
+    --border: #334155;
+    --text: #f1f5f9;
+    --muted: #94a3b8;
+    --red: #ef4444;
+    --blue: #3b82f6;
+    --left-accent: #f59e0b;
+    --left-bg: rgba(245, 158, 11, 0.08);
+    --right-accent: #06b6d4;
+    --right-bg: rgba(6, 182, 212, 0.08);
+    --green: #10b981;
+    --green-bg: rgba(16, 185, 129, 0.16);
+    --purple: #a855f7;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.45;
+    padding: 14px;
+  }
+  .container { max-width: 1360px; margin: 0 auto; }
+  header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 14px;
+  }
+  header h1 { font-size: 1.2rem; font-weight: 700; letter-spacing: 0.2px; }
+  header p { font-size: 0.82rem; color: var(--muted); }
+  .badge-info {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .badge-info strong { color: var(--text); }
+
+  /* Control Panel */
+  .panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 14px;
+  }
+  .controls-top {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  button {
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.88rem;
+    padding: 9px 14px;
+    transition: transform 0.08s ease, opacity 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  button:active { transform: scale(0.97); }
+  button:hover { opacity: 0.92; }
+  .btn-red { background: var(--red); color: #fff; min-width: 105px; justify-content: center; }
+  .btn-blue { background: var(--blue); color: #fff; min-width: 105px; justify-content: center; }
+  .btn-sec { background: #334155; color: var(--text); }
+  .btn-danger { background: rgba(239,68,68,0.2); color: #fca5a5; border: 1px solid rgba(239,68,68,0.4); }
+  .btn-sample { background: rgba(16,185,129,0.2); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.4); }
+
+  .quick-input {
+    display: flex;
+    flex: 1;
+    min-width: 220px;
+    gap: 6px;
+  }
+  .quick-input input {
+    flex: 1;
+    background: var(--card-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    min-width: 0;
+  }
+  .quick-input input:focus { outline: none; border-color: var(--blue); }
+
+  /* Sequence Beads */
+  .seq-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .beads-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    min-height: 40px;
+    padding: 8px;
+    background: var(--card-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    align-items: center;
+  }
+  .bead {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #fff;
+    position: relative;
+    user-select: none;
+  }
+  .bead.R { background: var(--red); box-shadow: 0 0 0 2px rgba(239,68,68,0.3); }
+  .bead.B { background: var(--blue); box-shadow: 0 0 0 2px rgba(59,130,246,0.3); }
+  .bead span.idx { font-size: 0.56rem; opacity: 0.85; line-height: 1; }
+  .bead span.lbl { font-size: 0.72rem; line-height: 1; }
+  .empty-hint { color: var(--muted); font-size: 0.82rem; font-style: italic; }
+
+  /* Next Game Action Card (Ván sắp ra) */
+  .next-game-banner {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.14), rgba(59, 130, 246, 0.12));
+    border: 1px solid rgba(168, 85, 247, 0.45);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+  .ng-left {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .ng-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #d8b4fe;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .ng-main {
+    font-size: 0.96rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .ng-sub {
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+  .ng-scenarios {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .scen-box {
+    background: var(--card-2);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 7px 11px;
+    min-width: 175px;
+  }
+  .scen-box.red-scen { border-color: rgba(239, 68, 68, 0.45); }
+  .scen-box.blue-scen { border-color: rgba(59, 130, 246, 0.45); }
+  .scen-head {
+    font-size: 0.73rem;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+  .scen-body {
+    font-size: 0.82rem;
+    font-weight: 700;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+
+  /* Independent Side Trend Dashboards - ALWAYS 2 COLUMNS SIDE-BY-SIDE */
+  .dash-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  .dash-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 13px;
+    min-width: 0;
+  }
+  .dash-card.left-dash { border-color: rgba(245, 158, 11, 0.35); }
+  .dash-card.right-dash { border-color: rgba(6, 182, 212, 0.35); }
+
+  .dash-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+    padding-bottom: 7px;
+    border-bottom: 1px solid var(--border);
+  }
+  .dash-title h2 { font-size: 0.94rem; font-weight: 700; }
+  .tag {
+    font-size: 0.7rem;
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .tag-left { background: rgba(245, 158, 11, 0.2); color: #fcd34d; }
+  .tag-right { background: rgba(6, 182, 212, 0.2); color: #67e8f9; }
+
+  .pred-box {
+    background: var(--card-2);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 9px 10px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+  .pred-label { font-size: 0.74rem; color: var(--muted); }
+  .pred-val { font-size: 0.98rem; font-weight: 800; margin-top: 2px; }
+  .pred-reason { font-size: 0.73rem; color: var(--muted); text-align: right; max-width: 56%; }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .stat-item {
+    background: var(--card-2);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 6px 4px;
+    text-align: center;
+  }
+  .stat-item .k { font-size: 0.68rem; color: var(--muted); }
+  .stat-item .v { font-size: 0.9rem; font-weight: 700; margin-top: 1px; }
+
+  .history-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+    min-height: 24px;
+  }
+  .pill {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 5px;
+  }
+  .pill.win { background: rgba(16,185,129,0.22); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.4); }
+  .pill.lose { background: rgba(239,68,68,0.22); color: #fca5a5; border: 1px solid rgba(239,68,68,0.4); }
+
+  /* Two-Column Left / Right Main Display - ALWAYS 2 COLUMNS SIDE-BY-SIDE ON ALL SCREENS */
+  .columns-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+  .side-col {
+    border-radius: 12px;
+    padding: 13px;
+    border: 1px solid var(--border);
+    min-width: 0;
+  }
+  .side-left {
+    background: linear-gradient(180deg, var(--left-bg), var(--card));
+    border-color: rgba(245, 158, 11, 0.35);
+  }
+  .side-right {
+    background: linear-gradient(180deg, var(--right-bg), var(--card));
+    border-color: rgba(6, 182, 212, 0.35);
+  }
+  .side-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+    padding-bottom: 9px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .side-left .side-header h3 { color: var(--left-accent); font-size: 0.98rem; }
+  .side-right .side-header h3 { color: var(--right-accent); font-size: 0.98rem; }
+  .cycle-order {
+    font-size: 0.72rem;
+    color: var(--muted);
+    background: var(--card-2);
+    padding: 3px 7px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+
+  .rows-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .group-row {
+    display: grid;
+    grid-template-columns: 48px 134px 1fr;
+    align-items: center;
+    gap: 6px;
+    background: var(--card-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    transition: border-color 0.2s;
+  }
+  .side-left .group-row:hover { border-color: var(--left-accent); }
+  .side-right .group-row:hover { border-color: var(--right-accent); }
+
+  .group-row.pending-row {
+    border-style: dashed;
+    border-width: 1.5px;
+    background: rgba(168, 85, 247, 0.08);
+    border-color: rgba(168, 85, 247, 0.55);
+  }
+
+  .grp-col {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-weight: 800;
+    font-size: 0.9rem;
+  }
+  .grp-badge {
+    display: inline-block;
+    min-width: 32px;
+    padding: 2px 5px;
+    border-radius: 5px;
+    text-align: center;
+  }
+  .side-left .grp-badge { background: rgba(245, 158, 11, 0.18); color: #fcd34d; }
+  .side-right .grp-badge { background: rgba(6, 182, 212, 0.18); color: #67e8f9; }
+  .colon-sep { color: var(--muted); font-weight: 700; }
+
+  .digits-box {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .digit {
+    width: 26px;
+    height: 28px;
+    border-radius: 5px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.92rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    position: relative;
+  }
+  .digit.d4 { background: rgba(239, 68, 68, 0.22); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.45); }
+  .digit.d3 { background: rgba(59, 130, 246, 0.22); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.45); }
+  .digit.mid-digit {
+    box-shadow: inset 0 -2px 0 rgba(255, 255, 255, 0.45);
+  }
+  .digit.d-wait {
+    background: rgba(168, 85, 247, 0.2);
+    color: #e9d5ff;
+    border: 1px dashed rgba(168, 85, 247, 0.75);
+    animation: pulseWait 1.6s infinite ease-in-out;
+  }
+  @keyframes pulseWait {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; }
+  }
+
+  .status-col {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 5px;
+    flex-wrap: wrap;
+    font-size: 0.78rem;
+  }
+  .win-range {
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-right: auto;
+  }
+
+  .eval-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 8px;
+    border-radius: 5px;
+    font-weight: 700;
+    font-size: 0.76rem;
+    white-space: nowrap;
+  }
+  .eval-chip .p-even { color: #93c5fd; }
+  .eval-chip .p-odd { color: #fcd34d; }
+  .eval-chip .sep { color: var(--muted); }
+
+  .eval-chip.is-base {
+    background: rgba(148, 163, 184, 0.12);
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    color: var(--muted);
+  }
+  .eval-chip.is-win {
+    background: rgba(16, 185, 129, 0.18);
+    border: 1px solid rgba(16, 185, 129, 0.45);
+    color: #6ee7b7;
+  }
+  .eval-chip.is-lose {
+    background: rgba(239, 68, 68, 0.18);
+    border: 1px solid rgba(239, 68, 68, 0.45);
+    color: #fca5a5;
+  }
+  .eval-chip.is-wait {
+    background: rgba(168, 85, 247, 0.2);
+    border: 1px solid rgba(168, 85, 247, 0.45);
+    color: #e9d5ff;
+  }
+
+  .ref-hint {
+    font-size: 0.68rem;
+    color: var(--muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+
+  .formula-note {
+    margin-top: 14px;
+    font-size: 0.78rem;
+    color: var(--muted);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+  .formula-note strong { color: var(--text); }
+
+  /* Mobile Compact Adjustments: Keep 2 Columns Side-by-Side without stacking */
+  @media (max-width: 768px) {
+    body { padding: 6px; }
+    header { margin-bottom: 10px; padding-bottom: 8px; gap: 6px; }
+    header h1 { font-size: 0.95rem; }
+    header p { font-size: 0.72rem; }
+    .badge-info { font-size: 0.72rem; padding: 4px 8px; }
+
+    .panel { padding: 10px; margin-bottom: 10px; border-radius: 10px; }
+    .controls-top { gap: 6px; margin-bottom: 8px; }
+    button { padding: 7px 10px; font-size: 0.78rem; border-radius: 7px; }
+    .btn-red, .btn-blue { min-width: 82px; flex: 1; }
+    .quick-input { min-width: 100%; }
+    .quick-input input { padding: 7px 9px; font-size: 0.78rem; }
+
+    .seq-header { font-size: 0.72rem; margin-bottom: 6px; }
+    .beads-wrap { padding: 6px; gap: 4px; min-height: 34px; }
+    .bead { width: 24px; height: 24px; }
+    .bead span.idx { font-size: 0.5rem; }
+    .bead span.lbl { font-size: 0.65rem; }
+
+    .next-game-banner { padding: 9px 10px; margin-bottom: 10px; gap: 8px; }
+    .ng-title { font-size: 0.72rem; }
+    .ng-main { font-size: 0.82rem; }
+    .ng-sub { font-size: 0.7rem; }
+    .ng-scenarios { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .scen-box { min-width: 0; padding: 6px 8px; }
+    .scen-head { font-size: 0.66rem; }
+    .scen-body { font-size: 0.74rem; }
+
+    /* Keep Dashboards & Main Left/Right Columns strictly 2 columns side-by-side */
+    .dash-grid, .columns-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .dash-card, .side-col {
+      padding: 8px 6px;
+      border-radius: 9px;
+    }
+    .dash-title { margin-bottom: 6px; padding-bottom: 5px; }
+    .dash-title h2 { font-size: 0.74rem; }
+    .tag { display: none; }
+
+    .pred-box {
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 6px 7px;
+      gap: 3px;
+      margin-bottom: 6px;
+    }
+    .pred-label { font-size: 0.65rem; }
+    .pred-val { font-size: 0.78rem; }
+    .pred-reason { max-width: 100%; text-align: left; font-size: 0.65rem; line-height: 1.3; }
+
+    .stats-row { gap: 4px; margin-bottom: 6px; }
+    .stat-item { padding: 4px 2px; }
+    .stat-item .k { font-size: 0.58rem; }
+    .stat-item .v { font-size: 0.76rem; }
+    .pill { font-size: 0.62rem; padding: 1px 5px; }
+
+    .side-header {
+      padding-bottom: 6px;
+      margin-bottom: 7px;
+      gap: 3px;
+    }
+    .side-left .side-header h3, .side-right .side-header h3 { font-size: 0.78rem; }
+    .cycle-order { font-size: 0.6rem; padding: 2px 5px; }
+
+    .rows-stack { gap: 5px; }
+    .group-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 6px;
+      gap: 4px;
+      border-radius: 7px;
+    }
+    .grp-col { font-size: 0.74rem; gap: 2px; }
+    .grp-badge { min-width: 24px; padding: 1px 4px; font-size: 0.72rem; }
+    .digits-box { gap: 2px; }
+    .digit {
+      width: 19px;
+      height: 22px;
+      font-size: 0.76rem;
+      border-radius: 4px;
+    }
+    .status-col {
+      width: 100%;
+      justify-content: space-between;
+      padding-top: 3px;
+      border-top: 1px dashed rgba(51, 65, 85, 0.65);
+      gap: 3px;
+    }
+    .win-range { font-size: 0.6rem; margin-right: 0; }
+    .ref-hint { font-size: 0.58rem; }
+    .eval-chip { font-size: 0.66rem; padding: 1px 5px; gap: 3px; }
+
+    .formula-note { font-size: 0.68rem; padding: 8px 10px; margin-top: 10px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div>
+      <h1>Hệ Thống Phân Tích Cầu Baccarat — Đối Chiếu Nhịp Chuẩn 2 Hàng Trên</h1>
+      <p>Mỗi bên Trái / Phải tự tính độc lập: ghép 2 số giữa của 2 hàng liền trên tạo dãy chuẩn 4 số → so Chẵn/Lẻ với hàng đang xét để chấm Đúng / Sai.</p>
+    </div>
+    <div class="badge-info">
+      Đã nhập: <strong id="totalCount">0</strong> ván &nbsp;|&nbsp; Ô đủ 4 số: <strong id="windowCount">0</strong>
+    </div>
+  </header>
+
+  <!-- Input Panel -->
+  <section class="panel">
+    <div class="controls-top">
+      <button class="btn-red" onclick="addResult('R')">+ Đỏ (Đ)</button>
+      <button class="btn-blue" onclick="addResult('B')">+ Xanh (X)</button>
+      <button class="btn-sec" onclick="undoResult()">↩ Xóa 1 ván</button>
+      <button class="btn-danger" onclick="clearAll()">✕ Xóa hết</button>
+      <button class="btn-sample" onclick="loadSample22()">Nạp mẫu 22 ván</button>
+
+      <div class="quick-input">
+        <input type="text" id="bulkInput" placeholder="Nhập nhanh chuỗi (VD: Đ X Đ Đ X Đ hoặc R B R...)" onkeydown="if(event.key==='Enter') applyBulk()">
+        <button class="btn-sec" onclick="applyBulk()">Thêm chuỗi</button>
+      </div>
+    </div>
+
+    <div class="seq-header">
+      <span>Chuỗi kết quả đã nhập (từ ván 11 trở đi sẽ hiện ngay ô chờ 3 số cho lượt tiếp theo):</span>
+      <span id="needMoreHint">Còn thiếu 11 ván để thấy ô chờ 3 số đầu tiên</span>
+    </div>
+    <div class="beads-wrap" id="beadsWrap">
+      <span class="empty-hint">Chưa có dữ liệu. Nhấn "+ Đỏ", "+ Xanh" hoặc "Nạp mẫu 22 ván" để bắt đầu.</span>
+    </div>
+  </section>
+
+  <!-- Live Next-Game Scenario Helper -->
+  <section class="next-game-banner" id="nextGameBanner" style="display:none;">
+    <div class="ng-left">
+      <div class="ng-title">⚡ Soi Ván Sắp Ra (Ván thứ <span id="ngGameNum">12</span>) — Đối Chiếu Nhịp Chuẩn</div>
+      <div class="ng-main" id="ngMainText">—</div>
+      <div class="ng-sub" id="ngSubText">—</div>
+    </div>
+    <div class="ng-scenarios" id="ngScenarios"></div>
+  </section>
+
+  <!-- Independent Left & Right Rhythm Trend Dashboards -->
+  <section class="dash-grid">
+    <!-- LEFT SIDE DASHBOARD -->
+    <div class="dash-card left-dash">
+      <div class="dash-title">
+        <h2 style="color:var(--left-accent)">Nhịp Đúng / Sai — BÊN TRÁI</h2>
+        <span class="tag tag-left">Độc lập Bên Trái</span>
+      </div>
+      <div class="pred-box">
+        <div>
+          <div class="pred-label">Xu hướng Đúng / Sai Bên Trái</div>
+          <div class="pred-val" id="leftPredVal">—</div>
+        </div>
+        <div class="pred-reason" id="leftPredReason">Cần tối thiểu 3 hàng bên trái để bắt đầu chấm Đúng/Sai.</div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-item"><div class="k">Đúng (Trái)</div><div class="v" style="color:#6ee7b7" id="leftWinCount">0</div></div>
+        <div class="stat-item"><div class="k">Sai (Trái)</div><div class="v" style="color:#fca5a5" id="leftLoseCount">0</div></div>
+        <div class="stat-item"><div class="k">Chuỗi hiện tại</div><div class="v" id="leftStreak">—</div></div>
+      </div>
+      <div style="font-size:0.7rem; color:var(--muted); margin-bottom:4px;">Lịch sử Đúng / Sai Bên Trái:</div>
+      <div class="history-strip" id="leftHistory"></div>
+    </div>
+
+    <!-- RIGHT SIDE DASHBOARD -->
+    <div class="dash-card right-dash">
+      <div class="dash-title">
+        <h2 style="color:var(--right-accent)">Nhịp Đúng / Sai — BÊN PHẢI</h2>
+        <span class="tag tag-right">Độc lập Bên Phải</span>
+      </div>
+      <div class="pred-box">
+        <div>
+          <div class="pred-label">Xu hướng Đúng / Sai Bên Phải</div>
+          <div class="pred-val" id="rightPredVal">—</div>
+        </div>
+        <div class="pred-reason" id="rightPredReason">Cần tối thiểu 3 hàng bên phải để bắt đầu chấm Đúng/Sai.</div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-item"><div class="k">Đúng (Phải)</div><div class="v" style="color:#6ee7b7" id="rightWinCount">0</div></div>
+        <div class="stat-item"><div class="k">Sai (Phải)</div><div class="v" style="color:#fca5a5" id="rightLoseCount">0</div></div>
+        <div class="stat-item"><div class="k">Chuỗi hiện tại</div><div class="v" id="rightStreak">—</div></div>
+      </div>
+      <div style="font-size:0.7rem; color:var(--muted); margin-bottom:4px;">Lịch sử Đúng / Sai Bên Phải:</div>
+      <div class="history-strip" id="rightHistory"></div>
+    </div>
+  </section>
+
+  <!-- Main Two-Column Display -->
+  <section class="columns-grid">
+    <!-- LEFT COLUMN -->
+    <div class="side-col side-left">
+      <div class="side-header">
+        <h3>BÊN TRÁI (Lượt Lẻ)</h3>
+        <span class="cycle-order">1,4 → 3 → 2 → lặp</span>
+      </div>
+      <div class="rows-stack" id="leftStack">
+        <div class="empty-hint">Chưa có ô nào bên trái.</div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="side-col side-right">
+      <div class="side-header">
+        <h3>BÊN PHẢI (Lượt Chẵn)</h3>
+        <span class="cycle-order">2 → 1,4 → 3 → lặp</span>
+      </div>
+      <div class="rows-stack" id="rightStack">
+        <div class="empty-hint">Chưa có ô nào bên phải.</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="formula-note">
+    <strong>Quy tắc ghép nhịp chuẩn đối chiếu độc lập từng bên:</strong>
+    Ở mỗi bên, 2 hàng đầu tiên là 2 hàng nền để lấy nhịp (chỉ hiện <strong>Chẵn / Lẻ</strong> riêng của từng hàng).
+    Từ hàng thứ 3 trở đi, lấy <strong>2 chữ số giữa</strong> của hàng trên thứ nhất + <strong>2 chữ số giữa</strong> của hàng trên thứ hai ghép trực tiếp thành dãy 4 số chuẩn (ví dụ: <code>4334</code> lấy <code>33</code> + <code>3334</code> lấy <code>33</code> → <code>3333</code> là <strong>Chẵn</strong>).
+    Nếu hàng đang xét có cùng tính chất Chẵn/Lẻ với dãy chuẩn → <strong>Đúng</strong>; ngược lại → <strong>Sai</strong>.
+  </div>
+</div>
+
+<script>
+  let results = []; // 'R' (Đỏ) or 'B' (Xanh)
+  const STEP_GROUP = ['1,4', '2', '3']; // Lượt 1: 1,4 | Lượt 2: 2 | Lượt 3: 3 | Lượt 4: 1,4 ...
+
+  function addResult(val) {
+    results.push(val);
+    render();
+  }
+
+  function undoResult() {
+    if (results.length > 0) {
+      results.pop();
+      render();
+    }
+  }
+
+  function clearAll() {
+    results = [];
+    render();
+  }
+
+  function applyBulk() {
+    const raw = document.getElementById('bulkInput').value.trim();
+    if (!raw) return;
+    const cleaned = raw
+      .replace(/đỏ|do|đ|r|bằng|banker/gi, ' R ')
+      .replace(/xanh|x|b|p|player/gi, ' B ');
+    const tokens = cleaned.split(/\s+/).filter(t => t === 'R' || t === 'B');
+    if (tokens.length > 0) {
+      results.push(...tokens);
+      document.getElementById('bulkInput').value = '';
+      render();
+    }
+  }
+
+  function loadSample22() {
+    results = [
+      'R','R','B','R','B','B','R','B','R','R','B','R',
+      'B','R','R','B','R','B','B','R','R','B'
+    ];
+    render();
+  }
+
+  function getParityFromDigits(digits4) {
+    const count4 = digits4.filter(d => d === '4').length;
+    return (count4 % 2 === 0) ? 'EVEN' : 'ODD';
+  }
+
+  function computeAllWindows(seq) {
+    const completed = [];
+    for (let start = 0; start + 12 <= seq.length; start++) {
+      const slice = seq.slice(start, start + 12);
+      const digits = [];
+      for (let c = 0; c < 4; c++) {
+        const first = slice[c * 3];
+        const last = slice[c * 3 + 2];
+        digits.push(first === last ? '4' : '3');
+      }
+      const parity = getParityFromDigits(digits);
+      const group = STEP_GROUP[start % 3];
+      completed.push({
+        isPending: false,
+        turn: start + 1,
+        from: start + 1,
+        to: start + 12,
+        group,
+        digits,
+        code: digits.join(''),
+        parity
+      });
+    }
+
+    let pending = null;
+    if (seq.length >= 11) {
+      const start = seq.length - 11;
+      const slice11 = seq.slice(start, start + 11);
+      const digits3 = [];
+      for (let c = 0; c < 3; c++) {
+        const first = slice11[c * 3];
+        const last = slice11[c * 3 + 2];
+        digits3.push(first === last ? '4' : '3');
+      }
+      const anchorColor = slice11[9];
+      const anchorGameNum = start + 10;
+      const group = STEP_GROUP[start % 3];
+
+      const digitsIf4 = [...digits3, '4'];
+      const digitsIf3 = [...digits3, '3'];
+
+      pending = {
+        isPending: true,
+        turn: start + 1,
+        from: start + 1,
+        to: start + 12,
+        nextGameNum: seq.length + 1,
+        group,
+        digits: digits3,
+        prefix3: digits3.join(''),
+        anchorColor,
+        anchorGameNum,
+        parityIf4: getParityFromDigits(digitsIf4),
+        parityIf3: getParityFromDigits(digitsIf3)
+      };
+    }
+
+    return { completed, pending };
+  }
+
+  function evaluateSideRows(sideItems) {
+    return sideItems.map((item, idx) => {
+      if (idx < 2) {
+        return {
+          ...item,
+          hasRef: false,
+          refCode: null,
+          refParity: null,
+          isWin: null
+        };
+      }
+      const prev1 = sideItems[idx - 2];
+      const prev2 = sideItems[idx - 1];
+      const refDigits = [prev1.digits[1], prev1.digits[2], prev2.digits[1], prev2.digits[2]];
+      const refCode = refDigits.join('');
+      const refParity = getParityFromDigits(refDigits);
+
+      if (item.isPending) {
+        return {
+          ...item,
+          hasRef: true,
+          refCode,
+          refParity,
+          isWin: null,
+          winIf4: item.parityIf4 === refParity,
+          winIf3: item.parityIf3 === refParity
+        };
+      }
+
+      const isWin = (item.parity === refParity);
+      return {
+        ...item,
+        hasRef: true,
+        refCode,
+        refParity,
+        isWin
+      };
+    });
+  }
+
+  function detectBinaryTrend(series, labelA, labelB) {
+    const n = series.length;
+    if (n === 0) {
+      return { next: null, reason: 'Chưa đủ 3 hàng để chấm Đúng/Sai.' };
+    }
+    if (n === 1) {
+      return { next: series[0], reason: `Mới có 1 nhịp (${series[0] === 'A' ? labelA : labelB}), tạm theo nhịp đầu.` };
+    }
+
+    let streak = 1;
+    for (let i = n - 2; i >= 0; i--) {
+      if (series[i] === series[n - 1]) streak++;
+      else break;
+    }
+
+    let altLen = 1;
+    for (let i = n - 2; i >= 0; i--) {
+      if (series[i] !== series[i + 1]) altLen++;
+      else break;
+    }
+
+    if (streak >= 2) {
+      const curLabel = series[n - 1] === 'A' ? labelA : labelB;
+      return {
+        next: series[n - 1],
+        reason: `Đang có xu hướng bệt ${curLabel} (${streak} lần liên tiếp) → theo bệt.`
+      };
+    }
+
+    if (altLen >= 3) {
+      const nextVal = series[n - 1] === 'A' ? 'B' : 'A';
+      const nextLabel = nextVal === 'A' ? labelA : labelB;
+      return {
+        next: nextVal,
+        reason: `Đang đi nhịp luân phiên 1-1 (${altLen} nhịp) → dự đoán đảo sang ${nextLabel}.`
+      };
+    }
+
+    const lastLabel = series[n - 1] === 'A' ? labelA : labelB;
+    return {
+      next: series[n - 1],
+      reason: `Bám theo nhịp gần nhất (${lastLabel}).`
+    };
+  }
+
+  function renderSideDashboard(prefix, evaluatedRows) {
+    const scored = evaluatedRows.filter(r => !r.isPending && r.isWin !== null);
+    const winCnt = scored.filter(r => r.isWin).length;
+    const loseCnt = scored.length - winCnt;
+
+    document.getElementById(`${prefix}WinCount`).textContent = winCnt;
+    document.getElementById(`${prefix}LoseCount`).textContent = loseCnt;
+
+    if (scored.length === 0) {
+      document.getElementById(`${prefix}PredVal`).textContent = '—';
+      document.getElementById(`${prefix}PredVal`).style.color = 'var(--text)';
+      document.getElementById(`${prefix}PredReason`).textContent = 'Cần tối thiểu 3 hàng ở cột này để bắt đầu chấm Đúng/Sai.';
+      document.getElementById(`${prefix}Streak`).textContent = '—';
+      document.getElementById(`${prefix}History`).innerHTML = '';
+      return;
+    }
+
+    const series = scored.map(r => r.isWin ? 'A' : 'B');
+    const trend = detectBinaryTrend(series, 'Đúng', 'Sai');
+    const predEl = document.getElementById(`${prefix}PredVal`);
+    predEl.textContent = trend.next === 'A' ? 'XU HƯỚNG: ĐÚNG' : 'XU HƯỚNG: SAI';
+    predEl.style.color = trend.next === 'A' ? '#6ee7b7' : '#fca5a5';
+    document.getElementById(`${prefix}PredReason`).textContent = trend.reason;
+
+    let streak = 1;
+    for (let i = series.length - 2; i >= 0; i--) {
+      if (series[i] === series[series.length - 1]) streak++;
+      else break;
+    }
+    document.getElementById(`${prefix}Streak`).textContent =
+      `${streak} ${series[series.length - 1] === 'A' ? 'Đúng' : 'Sai'}`;
+
+    document.getElementById(`${prefix}History`).innerHTML = scored.map(r => `
+      <span class="pill ${r.isWin ? 'win' : 'lose'}" title="Nhóm ${r.group} (${r.code}) vs Chuẩn ${r.refCode}">
+        ${r.isWin ? 'Đúng' : 'Sai'}
+      </span>
+    `).join('');
+  }
+
+  function render() {
+    document.getElementById('totalCount').textContent = results.length;
+    const { completed, pending } = computeAllWindows(results);
+    document.getElementById('windowCount').textContent = completed.length;
+
+    const needForPending = Math.max(0, 11 - results.length);
+    document.getElementById('needMoreHint').textContent =
+      needForPending > 0
+        ? `Còn thiếu ${needForPending} ván để hiện ô chờ 3 số đầu tiên`
+        : `Đã có ${completed.length} ô chốt + ô chờ lượt #${pending.turn} (${pending.prefix3}?)`;
+
+    const beadsWrap = document.getElementById('beadsWrap');
+    if (results.length === 0) {
+      beadsWrap.innerHTML = '<span class="empty-hint">Chưa có dữ liệu. Nhấn "+ Đỏ", "+ Xanh" hoặc "Nạp mẫu 22 ván" để bắt đầu.</span>';
+    } else {
+      beadsWrap.innerHTML = results.map((r, i) => `
+        <div class="bead ${r}" title="Ván ${i + 1}: ${r === 'R' ? 'Đỏ' : 'Xanh'}">
+          <span class="idx">${i + 1}</span>
+          <span class="lbl">${r === 'R' ? 'Đ' : 'X'}</span>
+        </div>
+      `).join('');
+    }
+
+    const allSequentialTurns = pending ? [...completed, pending] : [...completed];
+    const leftRaw = allSequentialTurns.filter(item => item.turn % 2 === 1);
+    const rightRaw = allSequentialTurns.filter(item => item.turn % 2 === 0);
+
+    const leftEvaluated = evaluateSideRows(leftRaw);
+    const rightEvaluated = evaluateSideRows(rightRaw);
+
+    renderSide('leftStack', leftEvaluated, 'Chưa có ô nào bên trái (cần tối thiểu 11 ván).');
+    renderSide('rightStack', rightEvaluated, 'Chưa có ô nào bên phải (cần tối thiểu 12 ván).');
+
+    renderSideDashboard('left', leftEvaluated);
+    renderSideDashboard('right', rightEvaluated);
+
+    const banner = document.getElementById('nextGameBanner');
+    if (!pending) {
+      banner.style.display = 'none';
+    } else {
+      banner.style.display = 'flex';
+      document.getElementById('ngGameNum').textContent = pending.nextGameNum;
+
+      const isLeft = (pending.turn % 2 === 1);
+      const sideName = isLeft ? 'BÊN TRÁI' : 'BÊN PHẢI';
+      const activeList = isLeft ? leftEvaluated : rightEvaluated;
+      const activePendingRow = activeList[activeList.length - 1];
+
+      const anchorText = pending.anchorColor === 'R' ? 'Đỏ' : 'Xanh';
+      const colorFor4 = pending.anchorColor === 'R' ? 'Đỏ' : 'Xanh';
+      const colorFor3 = pending.anchorColor === 'R' ? 'Xanh' : 'Đỏ';
+
+      const parity4Label = pending.parityIf4 === 'EVEN' ? 'Chẵn' : 'Lẻ';
+      const parity3Label = pending.parityIf3 === 'EVEN' ? 'Chẵn' : 'Lẻ';
+
+      let refSummary = 'Hàng nền (chưa đối chiếu Đúng/Sai)';
+      let outcome4Text = `${pending.prefix3}4 → ${parity4Label}`;
+      let outcome3Text = `${pending.prefix3}3 → ${parity3Label}`;
+
+      if (activePendingRow && activePendingRow.hasRef) {
+        const refP = activePendingRow.refParity === 'EVEN' ? 'Chẵn' : 'Lẻ';
+        refSummary = `Nhịp chuẩn 2 hàng trên: <strong>${activePendingRow.refCode} (${refP})</strong>`;
+        outcome4Text = `${pending.prefix3}4 → ${parity4Label} : <span style="color:${activePendingRow.winIf4 ? '#6ee7b7' : '#fca5a5'}">${activePendingRow.winIf4 ? 'Đúng' : 'Sai'}</span>`;
+        outcome3Text = `${pending.prefix3}3 → ${parity3Label} : <span style="color:${activePendingRow.winIf3 ? '#6ee7b7' : '#fca5a5'}">${activePendingRow.winIf3 ? 'Đúng' : 'Sai'}</span>`;
+      }
+
+      document.getElementById('ngMainText').innerHTML =
+        `${sideName} — Nhóm <span style="color:#fcd34d">${pending.group}</span> (Ván ${pending.from}–${pending.to}) đang chờ: <span style="color:#e9d5ff; font-family:monospace; font-size:1.05rem">${pending.prefix3}?</span> &nbsp;|&nbsp; <span style="font-size:0.82rem; font-weight:500; color:#cbd5e1">${refSummary}</span>`;
+
+      document.getElementById('ngSubText').innerHTML =
+        `So màu với ván <strong>#${pending.anchorGameNum} (${anchorText})</strong>: Nếu ván #${pending.nextGameNum} ra <strong>${colorFor4}</strong> → số cuối <strong>4</strong>; ra <strong>${colorFor3}</strong> → số cuối <strong>3</strong>.`;
+
+      const redIs4 = (pending.anchorColor === 'R');
+      const redOutcome = redIs4 ? outcome4Text : outcome3Text;
+      const blueOutcome = redIs4 ? outcome3Text : outcome4Text;
+
+      document.getElementById('ngScenarios').innerHTML = `
+        <div class="scen-box red-scen">
+          <div class="scen-head" style="color:#fca5a5">Nếu ván #${pending.nextGameNum} ra ĐỎ:</div>
+          <div class="scen-body" style="color:#fff">→ ${redOutcome}</div>
+        </div>
+        <div class="scen-box blue-scen">
+          <div class="scen-head" style="color:#93c5fd">Nếu ván #${pending.nextGameNum} ra XANH:</div>
+          <div class="scen-body" style="color:#fff">→ ${blueOutcome}</div>
+        </div>
+      `;
+    }
+  }
+
+  function renderSide(containerId, items, emptyMsg) {
+    const el = document.getElementById(containerId);
+    if (items.length === 0) {
+      el.innerHTML = `<div class="empty-hint">${emptyMsg}</div>`;
+      return;
+    }
+    el.innerHTML = items.map((item) => {
+      if (item.isPending) {
+        let statusHtml = `<span class="eval-chip is-wait">Chờ</span>`;
+        if (item.hasRef) {
+          const refP = item.refParity === 'EVEN' ? 'Chẵn' : 'Lẻ';
+          statusHtml = `
+            <span class="ref-hint" title="Nhịp chuẩn ghép từ 2 hàng trên">Chuẩn ${item.refCode}(${refP})</span>
+            <span class="eval-chip is-wait">Chờ</span>
+          `;
+        }
+        return `
+          <div class="group-row pending-row" title="Lượt #${item.turn} (Ván ${item.from}–${item.to}) — Đang chờ ván #${item.nextGameNum}">
+            <div class="grp-col">
+              <span class="grp-badge">${item.group}</span>
+              <span class="colon-sep">:</span>
+            </div>
+            <div class="digits-box">
+              ${item.digits.map((d, dIdx) => `<span class="digit d${d} ${(dIdx === 1 || dIdx === 2) ? 'mid-digit' : ''}">${d}</span>`).join('')}
+              <span class="digit d-wait">?</span>
+            </div>
+            <div class="status-col">
+              <span class="win-range">Ván ${item.from}–${item.to}</span>
+              ${statusHtml}
+            </div>
+          </div>
+        `;
+      }
+
+      const parityLabel = item.parity === 'EVEN' ? 'Chẵn' : 'Lẻ';
+      const parityClass = item.parity === 'EVEN' ? 'p-even' : 'p-odd';
+
+      let statusHtml = '';
+      if (!item.hasRef) {
+        statusHtml = `
+          <span class="eval-chip is-base">
+            <span class="${parityClass}">${parityLabel}</span>
+          </span>
+        `;
+      } else {
+        const refP = item.refParity === 'EVEN' ? 'Chẵn' : 'Lẻ';
+        const rwLabel = item.isWin ? 'Đúng' : 'Sai';
+        const rwClass = item.isWin ? 'is-win' : 'is-lose';
+        statusHtml = `
+          <span class="ref-hint" title="Ghép 2 số giữa của 2 hàng trên: ${item.refCode} (${refP})">Chuẩn ${item.refCode}(${refP})</span>
+          <span class="eval-chip ${rwClass}">
+            <span class="${parityClass}">${parityLabel}</span>
+            <span class="sep">:</span>
+            <span>${rwLabel}</span>
+          </span>
+        `;
+      }
+
+      return `
+        <div class="group-row" title="Lượt #${item.turn} (Ván ${item.from}–${item.to})">
+          <div class="grp-col">
+            <span class="grp-badge">${item.group}</span>
+            <span class="colon-sep">:</span>
+          </div>
+          <div class="digits-box">
+            ${item.digits.map((d, dIdx) => `<span class="digit d${d} ${(dIdx === 1 || dIdx === 2) ? 'mid-digit' : ''}">${d}</span>`).join('')}
+          </div>
+          <div class="status-col">
+            <span class="win-range">Ván ${item.from}–${item.to}</span>
+            ${statusHtml}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  render();
+</script>
+</body>
+</html>
